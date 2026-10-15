@@ -1796,6 +1796,21 @@ class testFunctionCallsFlow(FlowTestsBase):
         for query, expected_result in query_to_expected_result.items():
             self.get_res_and_assertEquals(query, expected_result)
 
+    def test_round_negative_halves_round_toward_positive_infinity(self):
+        # openCypher/Neo4j: single-arg round() breaks ties toward +inf, not away from zero.
+        self.env.assertEqual(self.graph.query("RETURN round(-2.5) AS r").result_set, [[-2]])
+        self.env.assertEqual(self.graph.query("RETURN round(-1.5) AS r").result_set, [[-1]])
+        self.env.assertEqual(self.graph.query("RETURN round(-0.5) AS r").result_set, [[0]])
+        # controls that already passed and must keep passing:
+        self.env.assertEqual(self.graph.query("RETURN round(0.5) AS r").result_set, [[1]])
+        self.env.assertEqual(self.graph.query("RETURN round(1.5) AS r").result_set, [[2]])
+        self.env.assertEqual(self.graph.query("RETURN round(2.5) AS r").result_set, [[3]])
+        self.env.assertEqual(self.graph.query("RETURN round(-2.4) AS r").result_set, [[-2]])
+        self.env.assertEqual(self.graph.query("RETURN round(-2.6) AS r").result_set, [[-3]])
+        self.env.assertEqual(self.graph.query("RETURN round(NULL) AS r").result_set, [[None]])
+        # integer passthrough (documented decision, #283) must be unchanged:
+        self.env.assertEqual(self.graph.query("RETURN round(-3) AS r").result_set, [[-3]])
+
     def test59_Sign(self):
         query_to_expected_result = {
             "RETURN SIGN(0)": [[0]], 

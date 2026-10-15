@@ -196,7 +196,11 @@ pub fn register(funcs: &mut Functions) {
         fn round(_, args) {
             match &args[0] {
                 Value::Int(n) => Ok(Value::Int(*n)),
-                Value::Float(f) => Ok(Value::Float(f.round())),
+                Value::Float(f) => {
+                    // Ties round toward +∞ (Java Math.round / openCypher single-arg round()),
+                    // not away from zero. (f + 0.5).floor() gives -2 for -2.5, 0 for -0.5.
+                    Ok(Value::Float((f + 0.5).floor()))
+                }
                 Value::Null => Ok(Value::Null),
 
                 _ => unreachable!(),

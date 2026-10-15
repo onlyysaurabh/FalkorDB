@@ -1180,17 +1180,15 @@ def test_rand():
     assert shannon_entropy(data) > 0.9  # Check for randomness
 
 
-def round_away_from_zero(num):
-    if num > 0:
-        return math.floor(num + 0.5)
-    else:
-        return math.ceil(num - 0.5)
+def round_half_up(num):
+    # openCypher/Neo4j single-arg round(): nearest integer, ties toward +inf.
+    return math.floor(num + 0.5)
 
 
 @given(st.none() | st.integers(-100, 100) | st.floats(-100, 100, allow_subnormal=False))
 def test_round(a):
     res = query("RETURN round($a)", params={"a": a})
-    assert res.result_set == [[round_away_from_zero(a) if a is not None else None]]
+    assert res.result_set == [[round_half_up(a) if a is not None else None]]
 
 
 def signum(x):
